@@ -1,0 +1,30 @@
+var2 7
+var3 69
+var4 0
+code:
+printn var2 7
+//comment hehe
+printc var3 59
+add var4 var4 7
+sub var2 1 -1
+printn var2
+whileneq var3 var2
+//yes
+printn var2 69
+endwhile
+whileneq0 var4
+whileeq0 0
+printc var3
+endwhile
+endwhile
+ifeq var3 var2
+endif
+ifneq0 1
+ifgeq 3 var3
+//comment strikes again
+else
+//helo i also exist
+endif
+else
+//code indeed
+endif
