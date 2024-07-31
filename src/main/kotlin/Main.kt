@@ -13,8 +13,8 @@ fun main() {
     val context = parser.code()
     val visitor = ASTGeneratingCalmVisitor()
     val ast = visitor.visit(context)
-    val code = KotlinBackend().generate(ast)
-    val out = File("src/main/compilerGenerated/Out.kt")
+    val code = JVMASMBackend().generate(ast)
+    val out = File("src/main/compilerGenerated/Out.j")
     out.delete()
     out.writeText(code.reduce { acc, it -> "$acc\n$it" } + "\n")
 }
