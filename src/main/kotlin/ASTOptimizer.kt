@@ -8,12 +8,11 @@ class ASTOptimizer {
             if (pruneComments) {
                 if (pruneComments(this.ast.tree)) continue
             }
-            if(precalculateArithmeticExpressions) {
+            if (precalculateArithmeticExpressions) {
                 if (precalculateArithmeticExpressions()) continue
             }
             break
         }
-        this.ast.vars[0] = Pair("test", 0)
         return ast
     }
 
@@ -31,33 +30,33 @@ class ASTOptimizer {
 
     private fun precalculateArithmeticExpressions(): Boolean {
         var changes = false
-        while (ast.tree.first() is ArithmeticComponent){
+        while (ast.tree.first() is ArithmeticComponent) {
             changes = true
             val operation = ast.tree.first() as ArithmeticComponent
             val target = ast.vars.indexOfFirst { it.first == operation.result }
-            when (operation.type){
+            when (operation.type) {
                 ArithmeticOperation.ADD -> {
                     var result = getVal(operation.operands.first())
                     operation.operands.drop(1).forEach { result += getVal(it) }
-                    ast.vars[target] = Pair(ast.vars[target].first, result)
+                    Pair(ast.vars[target].first, result).also { ast.vars[target] = it }
                 }
                 ArithmeticOperation.SUB -> {
                     var result = getVal(operation.operands.first())
                     operation.operands.drop(1).forEach { result -= getVal(it) }
-                    ast.vars[target] = Pair(ast.vars[target].first, result)
+                    Pair(ast.vars[target].first, result).also { ast.vars[target] = it }
                 }
                 ArithmeticOperation.MUL -> {
                     var result = getVal(operation.operands.first())
                     operation.operands.drop(1).forEach { result *= getVal(it) }
-                    ast.vars[target] = Pair(ast.vars[target].first, result)
+                    Pair(ast.vars[target].first, result).also { ast.vars[target] = it }
                 }
                 ArithmeticOperation.DIV -> {
                     val result = getVal(operation.operands.first()) / getVal(operation.operands[1])
-                    ast.vars[target] = Pair(ast.vars[target].first, result)
+                    Pair(ast.vars[target].first, result).also { ast.vars[target] = it }
                 }
                 ArithmeticOperation.MOD -> {
                     val result = getVal(operation.operands.first()) % getVal(operation.operands[1])
-                    ast.vars[target] = Pair(ast.vars[target].first, result)
+                    Pair(ast.vars[target].first, result).also { ast.vars[target] = it }
                 }
             }
             ast.tree.removeFirst()
