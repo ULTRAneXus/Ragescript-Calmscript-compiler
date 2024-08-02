@@ -39,6 +39,8 @@ class ASTOptimizer {
                     var result = getVal(operation.operands.first())
                     operation.operands.drop(1).forEach { result += getVal(it) }
                     Pair(ast.vars[target].first, result).also { ast.vars[target] = it }
+                    // I know that the line below is simpler than the line above, but it caused a class cast exception
+                    //ast.vars[target] = Pair(ast.vars[target].first, result)
                 }
                 ArithmeticOperation.SUB -> {
                     var result = getVal(operation.operands.first())
