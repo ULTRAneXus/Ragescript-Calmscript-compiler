@@ -1,7 +1,10 @@
 class ASTOptimizer {
     private lateinit var ast: RootComponent
     fun optimize(
-        ast: RootComponent, pruneComments: Boolean = false, precalculateArithmeticExpressions: Boolean = false
+        ast: RootComponent,
+        pruneComments: Boolean = false,
+        precalculateArithmeticExpressions: Boolean = false,
+        compactArithmeticExpressions: Boolean = false
     ): RootComponent {
         this.ast = ast
         while (true) {
@@ -10,6 +13,9 @@ class ASTOptimizer {
             }
             if (precalculateArithmeticExpressions) {
                 if (precalculateArithmeticExpressions()) continue
+            }
+            if (compactArithmeticExpressions) {
+                if (compactArithmeticExpressions()) continue
             }
             break
         }
@@ -26,9 +32,9 @@ class ASTOptimizer {
         ast.forEach {
             when (it) {
                 is BranchComponent -> changes =
-                    changes || _pruneCommentsRecursively(it.body) || _pruneCommentsRecursively(it.elseBody)
+                    changes or _pruneCommentsRecursively(it.body) or _pruneCommentsRecursively(it.elseBody)
 
-                is LoopComponent -> changes = changes || _pruneCommentsRecursively(it.body)
+                is LoopComponent -> changes = changes or _pruneCommentsRecursively(it.body)
             }
         }
         return changes
@@ -36,7 +42,7 @@ class ASTOptimizer {
 
     private fun precalculateArithmeticExpressions(): Boolean {
         var changes = false
-        while (ast.tree.first() is ArithmeticComponent) {
+        while (ast.tree.firstOrNull() is ArithmeticComponent) {
             changes = true
             val operation = ast.tree.first() as ArithmeticComponent
             val target = ast.vars.indexOfFirst { it.first == operation.result }
@@ -83,4 +89,52 @@ class ASTOptimizer {
             else -> throw RuntimeException()
         }
     }
+
+    private fun compactArithmeticExpressions(): Boolean {
+        return _compactArithmeticExpressionsRecursively(ast.tree)
+    }
+
+    private fun _compactArithmeticExpressionsRecursively(ast: MutableList<ASTComponent>): Boolean {
+        var changes = false
+        ast.forEach { comp ->
+            when (comp) {
+                is ArithmeticComponent -> {
+                    if (comp.operands.count { it is Int } > 1 && comp.operands.size > 2) {
+                        when (comp.type) {
+                            ArithmeticOperation.ADD, ArithmeticOperation.SUB -> {
+                                var compressedVal = 0
+                                comp.operands.filterIsInstance<Int>().forEach { compressedVal += getVal(it) }
+                                comp.operands.removeIf { it is Int }
+                                if (compressedVal != 0) comp.operands += compressedVal
+//                                if(comp.operands.size == 0) comp.operands += 0
+                                if(comp.operands.size == 1) comp.operands += 0
+                                changes = true
+                            }
+
+                            ArithmeticOperation.MUL -> {
+                                var compressedVal = 1
+                                comp.operands.filterIsInstance<Int>().forEach { compressedVal *= getVal(it) }
+                                comp.operands.removeIf { it is Int }
+                                if (compressedVal != 0) comp.operands += compressedVal
+//                                if(comp.operands.size == 0) comp.operands += 1
+                                if(comp.operands.size == 1) comp.operands += 1
+                                changes = true
+                            }
+
+                            else -> {}
+                        }
+                    }
+                }
+
+                is BranchComponent -> changes =
+                    changes or _compactArithmeticExpressionsRecursively(comp.body) or _compactArithmeticExpressionsRecursively(
+                        comp.elseBody
+                    )
+
+                is LoopComponent -> changes = changes or _compactArithmeticExpressionsRecursively(comp.body)
+            }
+        }
+        return changes
+    }
+
 }

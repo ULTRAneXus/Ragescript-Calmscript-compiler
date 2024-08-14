@@ -5,7 +5,7 @@ import java.io.File
 fun main() {
 //    val input = File("src/main/resources/test.rage").useLines { it.toList() }
 //    val calmedInput = RageToCalm().rageToCalm(input)
-    val calmedInput = File("src/main/resources/fibonacci.calm").useLines { it.toList() }
+    val calmedInput = File("src/main/resources/optimizationTest.calm").useLines { it.toList() }
     val inputStream = CharStreams.fromString(calmedInput.reduce { acc, it -> "$acc\n$it" })
     val lexer = calmLexer(inputStream)
     val commonTokenStream = CommonTokenStream(lexer)
@@ -13,7 +13,12 @@ fun main() {
     val context = parser.code()
     val visitor = ASTGeneratingCalmVisitor()
     val ast = visitor.visit(context)
-    val optimizedAST = ASTOptimizer().optimize(ast, pruneComments = true, precalculateArithmeticExpressions = true)
+    val optimizedAST = ASTOptimizer().optimize(
+        ast,
+        pruneComments = true,
+        precalculateArithmeticExpressions = true,
+        compactArithmeticExpressions = true
+    )
 //    val code = JVMASMBackend().generate(optimizedAST)
 //    val out = File("src/main/compilerGenerated/Out.j")
     val code = KotlinBackend().generate(optimizedAST)
